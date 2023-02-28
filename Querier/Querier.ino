@@ -21,6 +21,9 @@ const char* table_name = "table_name";
 // Create a software serial object with the RX and TX pins connected to pins D2 and D3, respectively
 SoftwareSerial mySerial(2, 3);
 
+// Float variables to store received messages
+float value1, value2, value3, value4;
+
 void setup() {
   // Start serial communication for debugging purposes
   Serial.begin(9600);
@@ -52,25 +55,31 @@ void loop() {
     delay(100);
   }
 
-  // Read the incoming data from software serial
-  String data = mySerial.readStringUntil('\n');
-  Serial.println("Received data: " + data);
-
-  // Split the incoming data into four numbers separated by commas
-  int values[4];
-  int pos = 0;
-  for (int i = 0; i < data.length(); i++) {
-    if (data.charAt(i) == ',') {
-      values[pos] = data.substring(i - 3, i).toInt();
-      pos++;
+  if (mySerial.available() > 0) {
+    String data = mySerial.readStringUntil('\n'); // Read the serial data until a newline character is received
+    int index1 = data.indexOf(','); // Find the first comma separator
+    int index2 = data.indexOf(',', index1+1); // Find the second comma separator
+    int index3 = data.indexOf(',', index2+1); // Find the third comma separator
+    if (index1 > -1 && index2 > -1 && index3 > -1) { // Check if all four values are received
+      value1 = data.substring(0, index1).toFloat(); // Convert the first value to a float
+      value2 = data.substring(index1+1, index2).toFloat(); // Convert the second value to a float
+      value3 = data.substring(index2+1, index3).toFloat(); // Convert the third value to a float
+      value4 = data.substring(index3+1).toFloat(); // Convert the fourth value to a float
+      Serial.print("Received: ");
+      Serial.print(value1);
+      Serial.print(", ");
+      Serial.print(value2);
+      Serial.print(", ");
+      Serial.print(value3);
+      Serial.print(", ");
+      Serial.println(value4);
     }
   }
-  values[pos] = data.substring(data.length() - 4).toInt();
 
   // Update the remote MySQL database with the data
   MySQL_Cursor* cursor = new MySQL_Cursor(&conn);
   char query[100];
-  sprintf(query, "UPDATE %s.%s SET value1=%d, value2=%d, value3=%d, value4=%d WHERE id=1", database_name, table_name, values[0], values[1], values[2], values[3]);
+  sprintf(query, "UPDATE %s.%s SET value1=%d, value2=%d, value3=%d, value4=%d WHERE id=1", database_name, table_name, values1, values2, values3, values4);
   cursor->execute(query);
   delete cursor;
 
