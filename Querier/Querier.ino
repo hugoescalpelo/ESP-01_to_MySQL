@@ -13,7 +13,7 @@ IPAddress server(192, 168, 1, 1);
 int port = 3306;
 const char* username = "db_username";
 const char* password_mysql = "db_pass";
-
+|
 // Replace with your remote database name and table name
 const char* database_name = "db_name";
 const char* table_name = "table_name";
